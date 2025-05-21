@@ -1,3 +1,7 @@
+export const TILE_WALL = 3;
+export const TILE_BUSH = 5;
+export const TILE_FLOOR = 1;
+
 export const createDefaultGrid = () => {
   const map = {
     cols: 12,
@@ -47,7 +51,7 @@ export const createDefaultGrid = () => {
       // loop through all layers and return TRUE if any tile is solid
       return map.layers.reduce((res, layer, index) => {
         const tile = getTile(index, col, row);
-        const isSolid = tile === 3 || tile === 5;
+        const isSolid = tile === TILE_WALL || tile === TILE_BUSH;
 
         return res || isSolid;
       }, false);

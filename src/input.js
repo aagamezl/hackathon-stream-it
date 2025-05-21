@@ -8,8 +8,10 @@ export const KEYBOARD = {
 
 // Create keyboard state
 export const createKeyboard = (keys) => {
-  const state = {};
-  keys.forEach(key => state[key] = false);
+  const state = keys.reduce((obj, key) => {
+    obj[key] = false;
+    return obj;
+  }, {});
 
   const handleKeyDown = (event) => {
     const keyCode = event.keyCode;

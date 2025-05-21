@@ -136,17 +136,33 @@ export const createGame = (ctx, grid, keyboard) => {
     // draw map background layer
     drawLayer(0);
 
-    // draw main character
+    // draw main character with animation
+    const directionMap = {
+      front: 0,
+      left: 1,
+      right: 2,
+      back: 3
+    };
+
+    const directionIndex = directionMap[state.hero.direction];
+    // Each direction has 3 frames (0 for standing, 1-2 for walking)
+    const frameX = state.hero.frame * state.hero.width;
+    const frameY = directionIndex * state.hero.height;
+
     state.ctx.drawImage(
       state.hero.image,
+      frameX, frameY, // source x, y
+      state.hero.width, state.hero.height, // source width, height
       state.hero.screenX - state.hero.width / 2,
-      state.hero.screenY - state.hero.height / 2);
+      state.hero.screenY - state.hero.height / 2,
+      state.hero.width, state.hero.height
+    );
 
     // draw map top layer
     drawLayer(1);
 
     // draw grid
-    drawGrid();
+    // drawGrid();
   }
 
   const update = (delta) => {
@@ -166,14 +182,10 @@ export const createGame = (ctx, grid, keyboard) => {
 
     // Update hero
     state.hero.move(delta, dirx, diry);
-    // state.hero.x = x;
-    // state.hero.y = y;
 
     // Update camera
-    const { /* x: cameraX, y: cameraY,  */screenX, screenY } = state.camera.update();
+    const { screenX, screenY } = state.camera.update();
 
-    // state.camera.x = cameraX;
-    // state.camera.y = cameraY;
     state.hero.screenX = screenX;
     state.hero.screenY = screenY;
 
@@ -194,8 +206,8 @@ export const createGame = (ctx, grid, keyboard) => {
     },
     loadAssets: () => {
       return Promise.all([
-        Loader.loadImage('tiles', '../assets/tiles.png'),
-        Loader.loadImage('hero', '../assets/character.png')
+        Loader.loadImage('tiles', '../assets/tileset.png'),
+        Loader.loadImage('hero', '../assets/mark.png')
       ]).then(([tiles, hero]) => {
         state.tileAtlas = tiles;
         state.heroImage = hero;

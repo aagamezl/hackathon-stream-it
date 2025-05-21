@@ -19,14 +19,13 @@ export const createCamera = (map, width, height) => {
   const update = () => {
     // assume followed sprite should be placed at the center of the screen
     // whenever possible
-    // state.following.screenX = state.width / 2;
-    // state.following.screenY = state.height / 2;
     let screenX = camera.width / 2;
     let screenY = camera.height / 2;
 
     // make the camera follow the sprite
     camera.x = camera.following.x - camera.width / 2;
     camera.y = camera.following.y - camera.height / 2;
+    
     // clamp values
     camera.x = Math.max(0, Math.min(camera.x, camera.maxX));
     camera.y = Math.max(0, Math.min(camera.y, camera.maxY));
@@ -37,31 +36,22 @@ export const createCamera = (map, width, height) => {
     // left and right sides
     if (camera.following.x < camera.width / 2 ||
       camera.following.x > camera.maxX + camera.width / 2) {
-      // state.following.screenX = state.following.x - state.x;
       screenX = camera.following.x - camera.x;
     }
 
     // top and bottom sides
     if (camera.following.y < camera.height / 2 ||
       camera.following.y > camera.maxY + camera.height / 2) {
-      // state.following.screenY = state.following.y - state.y;
+      screenY = camera.following.y - camera.y;
       screenY = camera.following.y - camera.y;
     }
 
     return {
-      // x: camera.x,
-      // y: camera.y,
       screenX,
       screenY
     };
   };
 
-
-  // return {
-  //   ...camera,
-  //   follow,
-  //   update
-  // };
 
   camera.follow = follow;
   camera.update = update;
