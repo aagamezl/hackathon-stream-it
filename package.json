@@ -1,0 +1,34 @@
+{
+  "name": "hackathon-stream-it",
+  "version": "1.0.0",
+  "main": "vite.config.js",
+  "scripts": {
+    "build": "vite build",
+    "dev": "vite",
+    "lint": "standard",
+    "lint:fix": "standard --fix",
+    "preview": "vite preview",
+    "start:dev": "vite"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/aagamezl/hackathon-stream-it.git"
+  },
+  "keywords": [],
+  "author": "Álvaro José Agámez Licha",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/aagamezl/hackathon-stream-it/issues"
+  },
+  "homepage": "https://github.com/aagamezl/hackathon-stream-it#readme",
+  "description": "",
+  "devDependencies": {
+    "standard": "^17.1.2",
+    "vite": "^6.3.5"
+  },
+  "standard": {
+    "globals": [
+      "Image"
+    ]
+  }
+}
