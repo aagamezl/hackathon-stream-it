@@ -1,6 +1,10 @@
-# Tile Quest Game
+# Hackathon Stream It Game
 
 A tile-based game built with JavaScript and Vite.
+
+## Play Live Demo 🚀
+
+A live version is available! [Try it.](https://aagamezl.github.io/hackathon-stream-it/)
 
 ## Project Setup
 
@@ -50,6 +54,6 @@ Images should be placed in the `assets` directory. The loader will automatically
 
 ## Development Notes
 
-- Ensure all image paths in the code use relative paths from the assets directory
-- Use the loader utility to load images for proper asset handling
-- The game uses a tile-based system for rendering and movement
+- Ensure all image paths in the code use relative paths from the assets directory.
+- Use the loader utility to load images for proper asset handling.
+- The game uses a tile-based system for rendering and movement.
