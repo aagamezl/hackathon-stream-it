@@ -13,7 +13,6 @@ export const Loader = {
 
       img.onload = () => {
         Loader.images[name] = img
-
         resolve(img)
       }
 
@@ -21,7 +20,8 @@ export const Loader = {
         reject(new Error(`Failed to load image: ${path}`))
       }
 
-      img.src = path
+      // Use Vite's public directory format
+      img.src = new URL(path, import.meta.url).href
     })
   }
 }

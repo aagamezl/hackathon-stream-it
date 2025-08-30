@@ -1,3 +1,8 @@
+export const TILE_WALL = 3
+export const TILE_BUSH = 5
+export const TILE_FLOOR = 1
+export const IS_SOLID_TILE = [TILE_WALL, TILE_BUSH]
+
 export const createDefaultGrid = () => {
   const map = {
     cols: 12,
@@ -40,17 +45,17 @@ export const createDefaultGrid = () => {
     ...map,
     getTile,
     isSolidTileAtXY: (x, y) => {
-      const col = Math.floor(x / map.tsize);
-      const row = Math.floor(y / map.tsize);
+      const col = Math.floor(x / map.tsize)
+      const row = Math.floor(y / map.tsize)
 
       // tiles 3 and 5 are solid -- the rest are walkable
       // loop through all layers and return TRUE if any tile is solid
       return map.layers.reduce((res, layer, index) => {
-        const tile = getTile(index, col, row);
-        const isSolid = tile === 3 || tile === 5;
+        const tile = getTile(index, col, row)
+        const isSolid = tile === TILE_WALL || tile === TILE_BUSH
 
-        return res || isSolid;
-      }, false);
+        return res || isSolid
+      }, false)
     },
     getCol: (x) => {
       return Math.floor(x / map.tsize)
@@ -64,5 +69,5 @@ export const createDefaultGrid = () => {
     getY: (row) => {
       return row * map.tsize
     }
-  };
+  }
 }
