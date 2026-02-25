@@ -1,27 +1,27 @@
-import { fileURLToPath } from 'node:url';
-import fs from 'node:fs/promises';
-import path from 'node:path';
+import { fileURLToPath } from 'node:url'
+import fs from 'node:fs/promises'
+import path from 'node:path'
 
-import { defineConfig } from 'vite';
+import { defineConfig } from 'vite'
 
-async function copyDir(src, dest) {
+async function copyDir (src, dest) {
   try {
-    const stat = await fs.stat(src);
-    if (!stat.isDirectory()) return;
+    const stat = await fs.stat(src)
+    if (!stat.isDirectory()) return
   } catch (e) {
     // source doesn't exist
-    return;
+    return
   }
 
-  await fs.mkdir(dest, { recursive: true });
-  const entries = await fs.readdir(src, { withFileTypes: true });
+  await fs.mkdir(dest, { recursive: true })
+  const entries = await fs.readdir(src, { withFileTypes: true })
   for (const entry of entries) {
-    const srcPath = path.join(src, entry.name);
-    const destPath = path.join(dest, entry.name);
+    const srcPath = path.join(src, entry.name)
+    const destPath = path.join(dest, entry.name)
     if (entry.isDirectory()) {
-      await copyDir(srcPath, destPath);
+      await copyDir(srcPath, destPath)
     } else if (entry.isFile()) {
-      await fs.copyFile(srcPath, destPath);
+      await fs.copyFile(srcPath, destPath)
     }
   }
 }
@@ -36,19 +36,19 @@ export default defineConfig({
     {
       name: 'copy-assets-to-dist',
       apply: 'build',
-      async closeBundle() {
-        const projectRoot = path.dirname(fileURLToPath(import.meta.url));
-        const src = path.join(projectRoot, 'assets');
-        const dest = path.join(projectRoot, 'dist', 'assets');
+      async closeBundle () {
+        const projectRoot = path.dirname(fileURLToPath(import.meta.url))
+        const src = path.join(projectRoot, 'assets')
+        const dest = path.join(projectRoot, 'dist', 'assets')
         try {
-          await copyDir(src, dest);
+          await copyDir(src, dest)
           // eslint-disable-next-line no-console
-          console.log(`copied assets from ${src} -> ${dest}`);
+          console.log(`copied assets from ${src} -> ${dest}`)
         } catch (err) {
           // eslint-disable-next-line no-console
-          console.error('failed to copy assets:', err);
+          console.error('failed to copy assets:', err)
         }
       }
     }
   ]
-});
+})

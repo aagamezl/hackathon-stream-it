@@ -1,0 +1,17 @@
+You are an expert in education, software development teaching
+
+I'm creating a bootcamp to teach teenager girls between 15 and 18 years old how to code.
+
+1. Read the file docs core-fundamentals.md and create content for the presentation.
+2. I will teach with a web video game, you can find the code in the src directory.
+3. Base the presentation on the code in the src directory.
+4. Add 3 analogies to explain every concept in the core-fundamentals.md file.
+5. Add 3 examples based on source code for every concept in the core-fundamentals.md file
+6. Add 3 exercises to practice the concepts in the core-fundamentals.md file.
+7. Add 3 resources to continue learning the concepts in the core-fundamentals.md file.
+8. Add 3 questions to answer in the presentation.
+9. Let's more one section at time, starting for section 1. How Computers Think, then section 2. Logic and Flow, then section 3. Advanced Concepts & Presentations.
+10. In the file schedule-hackathon.md you can find the the schedule for the bootcamp.
+11. Create the presentation based in the schedule-hackathon.md file.
+12. Keep the presentation simple and easy to understand.
+13. create a file called presentation.md in the docs folder

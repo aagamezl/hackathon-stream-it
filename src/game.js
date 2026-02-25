@@ -1,55 +1,17 @@
-import { createCamera } from './camera.js'
-import { IS_SOLID_TILE } from './grid.js'
-import { createHero } from './hero.js'
-import { KEYBOARD } from './input.js'
-import { Loader } from './loader.js'
+import { DIRECTIONS } from "./input.js";
+import { createHero } from "./hero.js";
+import { createCamera } from "./camera.js";
+import { ImageLoader } from "./image-loader.js";
+import { KEYBOARD } from "./input.js";
+import { IS_SOLID_TILE } from "./grid.js";
 
-/** @typedef {import('./grid.js').Grid} Grid */
-/** @typedef {import('./input.js').Keyboard} Keyboard */
+export const DIRECTIONS_MAP = {
+  [DIRECTIONS.DOWN]: 0,
+  [DIRECTIONS.LEFT]: 1,
+  [DIRECTIONS.RIGHT]: 2,
+  [DIRECTIONS.UP]: 3,
+};
 
-/** @typedef {Object} Hero
- * @property {number} x
- * @property {number} y
- * @property {number} width
- * @property {number} height
- * @property {Image} image
- */
-
-/** @typedef {Object} Camera
- * @property {number} x
- * @property {number} y
- * @property {number} width
- * @property {number} height
- * @property {number} maxX
- * @property {number} maxY
- * @property {Hero} following
- */
-
-/** @typedef {Object} GameState
- * @property {CanvasRenderingContext2D} ctx
- * @property {Image} tileAtlas
- * @property {Image} heroImage
- * @property {Grid} grid
- * @property {Keyboard} keyboard
- * @property {Object} camera
- * @property {Object} hero
- * @property {number} heroSpeed
- * @property {number} previousTime
- */
-
-/** @typedef {Object} Game
- * @property {GameState} state
- * @property {() => void} run
- * @property {() => Promise<GameState>} loadAssets
- */
-
-/**
- *
- * @param {CanvasRenderingContext2D} ctx
- * @param {Grid} grid
- * @param {Keyboard} keyboard
- * @returns {Game}
-*/
 export const createGame = (ctx, grid, keyboard) => {
   const state = {
     ctx,
@@ -60,154 +22,228 @@ export const createGame = (ctx, grid, keyboard) => {
     camera: null,
     hero: null,
     heroSpeed: 256,
-    previousTime: 0
-  }
+    previousTime: 0,
+    debug: false,
+  };
+
+  const drawGrid = () => {
+    if (!state.debug) {
+      return;
+    }
+
+    const camera = state.camera;
+    const grid = state.grid;
+    const tileSize = grid.tileSize;
+
+    const cameraX = camera.x;
+    const cameraY = camera.y;
+    const cameraWidth = camera.width;
+    const cameraHeight = camera.height;
+
+    const startColumn = Math.floor(cameraX / tileSize);
+    const startRow = Math.floor(cameraY / tileSize);
+    const endColumn = Math.floor((cameraX + cameraWidth) / tileSize);
+    const endRow = Math.floor((cameraY + cameraHeight) / tileSize);
+
+    const offsetX = -cameraX + startColumn * tileSize;
+    const offsetY = -cameraY + startRow * tileSize;
+
+    const columnsVisible = endColumn - startColumn + 1;
+    const rowsVisible = endRow - startRow + 1;
+    const visibleWidthPixels = columnsVisible * tileSize;
+    const visibleHeightPixel = rowsVisible * tileSize;
+
+    const ctx = state.ctx;
+
+    ctx.save();
+    ctx.strokeStyle = "rgba(0,0,0,0.15)";
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+
+    // vertical lines
+    for (let verticalLine = 0; verticalLine <= columnsVisible; verticalLine++) {
+      const x = Math.round(offsetX + verticalLine * tileSize);
+
+      ctx.moveTo(x, Math.round(offsetY));
+      ctx.lineTo(x, Math.round(offsetY + visibleHeightPixel));
+    }
+
+    // horizontal lines
+    for (let horizontalLine = 0; horizontalLine <= rowsVisible; horizontalLine++) {
+      const y = Math.round(offsetY + horizontalLine * tileSize);
+
+      ctx.moveTo(Math.round(offsetX), y);
+      ctx.lineTo(Math.round(offsetX + visibleWidthPixels), y);
+    }
+
+    ctx.stroke();
+    ctx.restore();
+  };
 
   const drawLayer = (layer) => {
-    const startCol = Math.floor(state.camera.x / state.grid.tsize)
-    const endCol = startCol + (state.camera.width / state.grid.tsize)
-    const startRow = Math.floor(state.camera.y / state.grid.tsize)
-    const endRow = startRow + (state.camera.height / state.grid.tsize)
-    const offsetX = -state.camera.x + startCol * state.grid.tsize
-    const offsetY = -state.camera.y + startRow * state.grid.tsize
+    // Cache frequently used values for performance and clarity
+    const camera = state.camera;
+    const grid = state.grid;
+    const tileSize = grid.tileSize;
+    const cameraX = camera.x;
+    const cameraY = camera.y;
+    const cameraWidth = camera.width;
+    const cameraHeight = camera.height;
+    const startColumn = Math.floor(cameraX / tileSize);
+    const startRow = Math.floor(cameraY / tileSize);
+    const endColumn = Math.floor((cameraX + cameraWidth) / tileSize);
+    const endRow = Math.floor((cameraY + cameraHeight) / tileSize);
+    const offsetX = -cameraX + startColumn * tileSize;
+    const offsetY = -cameraY + startRow * tileSize;
 
-    for (let c = startCol; c <= endCol; c++) {
+    const drawCtx = state.ctx;
+    const atlas = state.tileAtlas;
+
+    for (let c = startColumn; c <= endColumn; c++) {
       for (let r = startRow; r <= endRow; r++) {
-        const tile = state.grid.getTile(layer, c, r)
-        const x = (c - startCol) * state.grid.tsize + offsetX
-        const y = (r - startRow) * state.grid.tsize + offsetY
+        const tile = grid.getTile(layer, c, r);
 
-        if (tile !== 0) { // 0 => empty tile
-          state.ctx.drawImage(
-            state.tileAtlas, // image
-            (tile - 1) * state.grid.tsize, // source x
-            0, // source y
-            state.grid.tsize, // source width
-            state.grid.tsize, // source height
-            Math.round(x), // target x
-            Math.round(y), // target y
-            state.grid.tsize, // target width
-            state.grid.tsize // target height
-          )
+        // skip empty tiles quickly
+        if (!tile) {
+          continue;
+        }
 
-          // draw solid tiles collision box
-          if (IS_SOLID_TILE.includes(tile)) {
-            ctx.strokeRect(
-              x,
-              y,
-              state.grid.tsize,
-              state.grid.tsize
-            )
-          }
+        const x = (c - startColumn) * tileSize + offsetX;
+        const y = (r - startRow) * tileSize + offsetY;
+
+        drawCtx.drawImage(
+          atlas,
+          (tile - 1) * tileSize,
+          0,
+          tileSize,
+          tileSize,
+          Math.round(x),
+          Math.round(y),
+          tileSize,
+          tileSize
+        );
+
+        // Optional: draw debug collision boxes only when enabled
+        if (state.debug && IS_SOLID_TILE.includes(tile)) {
+          drawCtx.strokeRect(Math.round(x), Math.round(y), tileSize, tileSize);
         }
       }
     }
-  }
+  };
 
+  /**
+   *
+   * @param {number} currentTime
+   */
   const tick = (currentTime) => {
-    window.requestAnimationFrame(tick)
+    window.requestAnimationFrame(tick);
 
     // clear previous frame
-    ctx.clearRect(0, 0, 512, 512)
+    state.ctx.clearRect(0, 0, 512, 512);
 
     // compute delta time in seconds -- also cap it
-    const delta = Math.min((currentTime - state.previousTime) / 1000.0, 0.25) // maximum delta of 250 ms
-    state.previousTime = currentTime
+    const delta = Math.min((currentTime - state.previousTime) / 1000.0, 0.25); // maximum delta of 250 ms
+    state.previousTime = currentTime;
 
-    update(delta)
-    render()
-  }
+    update(delta);
+    render();
+  };
 
   const render = () => {
     // draw map background layer
-    drawLayer(0)
+    drawLayer(0);
 
-    // draw main character with animation
-    const directionMap = {
-      front: 0,
-      left: 1,
-      right: 2,
-      back: 3
-    }
-
-    const directionIndex = directionMap[state.hero.direction]
+    const directionIndex = DIRECTIONS_MAP[state.hero.direction];
     // Each direction has 3 frames (0 for standing, 1-2 for walking)
-    const frameX = state.hero.frame * state.hero.width
-    const frameY = directionIndex * state.hero.height
+    const frameX = state.hero.frame * state.hero.width;
+    const frameY = directionIndex * state.hero.height;
 
     state.ctx.drawImage(
       state.hero.image,
-      frameX, frameY, // source x, y
-      state.hero.width, state.hero.height, // source width, height
-      state.hero.screenX - state.hero.width / 2,
-      state.hero.screenY - state.hero.height / 2,
-      state.hero.width, state.hero.height
-    )
-
-    // draw hero collision box
-    ctx.strokeRect(
-      state.hero.x - state.hero.width / 2 - state.camera.x,
-      state.hero.y - state.hero.height / 2 - state.camera.y,
+      frameX,
+      frameY,
+      state.hero.width,
+      state.hero.height,
+      Math.round(state.hero.screenX - state.hero.width / 2),
+      Math.round(state.hero.screenY - state.hero.height / 2),
       state.hero.width,
       state.hero.height
-    )
+    );
+
+    // draw hero collision box
+    if (state.debug) {
+      state.ctx.strokeRect(
+        Math.round(state.hero.x - state.hero.width / 2 - state.camera.x),
+        Math.round(state.hero.y - state.hero.height / 2 - state.camera.y),
+        state.hero.width,
+        state.hero.height
+      );
+    }
 
     // draw map top layer
-    drawLayer(1)
+    drawLayer(1);
 
-    // draw grid
-    // drawGrid();
-  }
+    // draw grid lines in debug mode
+    drawGrid();
+  };
 
   const update = (delta) => {
     // handle hero movement with arrow keys
-    let dirx = 0
-    let diry = 0
+    let directionX = 0;
+    let directionY = 0;
 
     if (state.keyboard.isDown(KEYBOARD.LEFT)) {
-      dirx = -1
+      directionX = -1;
     } else if (state.keyboard.isDown(KEYBOARD.RIGHT)) {
-      dirx = 1
+      directionX = 1;
     } else if (state.keyboard.isDown(KEYBOARD.UP)) {
-      diry = -1
+      directionY = -1;
     } else if (state.keyboard.isDown(KEYBOARD.DOWN)) {
-      diry = 1
+      directionY = 1;
     }
 
     // Update hero
-    state.hero.move(delta, dirx, diry)
+    state.hero.move(delta, directionX, directionY);
 
     // Update camera
-    const { screenX, screenY } = state.camera.update()
+    const { screenX, screenY } = state.camera.update();
 
-    state.hero.screenX = screenX
-    state.hero.screenY = screenY
+    state.hero.screenX = screenX;
+    state.hero.screenY = screenY;
 
-    return state
-  }
+    // Toggle debug mode on SPACE press (rising edge) so a single press
+    // flips the mode instead of toggling every frame while held.
+    // const spaceDown = !!state.keyboard.isDown(KEYBOARD.SPACE)
+    // if (spaceDown && !state.spaceWasDown) {
+    //   state.debug = !state.debug
+    // }
+    // state.spaceWasDown = spaceDown
+
+    return state;
+  };
 
   return {
     state,
     run: () => {
-      state.keyboard.listen()
+      state.keyboard.listen();
 
-      state.hero = createHero(state.grid, 160, 160)
-      state.camera = createCamera(state.grid, 512, 512)
+      state.hero = createHero(state.grid, 160, 160);
+      state.camera = createCamera(state.grid, 512, 512);
 
-      state.camera.follow(state.hero)
+      state.camera.follow(state.hero);
 
-      window.requestAnimationFrame(tick)
+      window.requestAnimationFrame(tick);
     },
     loadAssets: () => {
       return Promise.all([
-        Loader.loadImage('tiles', './../assets/tileset.png'),
-        Loader.loadImage('hero', './../assets/mark.png')
+        ImageLoader.loadImage("tiles", "../assets/tileset.png"),
+        ImageLoader.loadImage("hero", "../assets/mark.png"),
       ]).then(([tiles, hero]) => {
-        state.tileAtlas = tiles
-        state.heroImage = hero
+        state.tileAtlas = tiles;
+        state.heroImage = hero;
 
-        return state
-      })
-    }
-  }
-}
+        return state;
+      });
+    },
+  };
+};
